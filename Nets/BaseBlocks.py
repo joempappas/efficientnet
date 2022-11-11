@@ -49,7 +49,7 @@ class StochasticDepth(nn.Module):
     def forward(self, input):
         if (self.drop_prob == 0) or (not self.training):
             return input
-        survival_rate = 1.0 - self.drop_rate
+        survival_rate = 1.0 - self.drop_prob
         if self.mode == "row":
             size = [input.shape[0]] + [1] * (input.ndim - 1)
         else:
