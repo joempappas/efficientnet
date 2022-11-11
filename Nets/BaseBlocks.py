@@ -36,25 +36,37 @@ class SEBlock(nn.Module):
                                         nn.SiLU())
         
     def forward(self, x):
-        resid = x
-        x = self.squeeze(x)
-        x = self.excite(x)
-        return resid*x
+        result = self.squeeze(x)
+        result = self.excite(result)
+        return result*x
 
 class StochasticDepth(nn.Module):
     def __init__(self, drop_prob):
         super(StochasticDepth, self).__init__()
         self.drop_prob=drop_prob
+        self.mode = "row"
         
-    def forward(self, x):
+    def forward(self, input):
         if (self.drop_prob == 0) or (not self.training):
-            return x
+            return input
+        survival_rate = 1.0 - self.drop_rate
+        if self.mode == "row":
+            size = [input.shape[0]] + [1] * (input.ndim - 1)
+        else:
+            size = [1] * input.ndim
+        noise = torch.empty(size, dtype=input.dtype, device=input.device)
+        noise = noise.bernoulli_(survival_rate)
+        if survival_rate > 0.0:
+            noise.div_(survival_rate)
+        return input * noise
         
+        """
         random = torch.rand(x.shape[0], 1, 1, 1, device=x.device) 
         mask = random > self.drop_prob
         x = x.div(1-self.drop_prob)
         x = x * mask
         return x
+        """
 
 class MBConvBlock(nn.Module):
     
@@ -73,14 +85,13 @@ class MBConvBlock(nn.Module):
                                           )
         
     def forward(self, x):
-        resid = x
         if self.mb_type == 6: 
             x = self.expand_block(x)
         
         x = self.reduce_block(x)
         if (self.use_skip_connect):
-            x = self.stochastic_depth(x)
-            x = x + resid
+            result = self.stochastic_depth(x)
+            x = x + result
         return x
         
         
