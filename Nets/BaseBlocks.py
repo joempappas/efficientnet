@@ -31,7 +31,7 @@ class SEBlock(nn.Module):
         self.squeeze = nn.AdaptiveAvgPool2d(1)
         hidden_dim = in_channels // r_factor
         self.excite = nn.Sequential(nn.Conv2d(in_channels, hidden_dim, kernel_size=1),
-                                        nn.ReLU(),
+                                        nn.SiLU(),
                                         nn.Conv2d(hidden_dim, in_channels, kernel_size=1),
                                         nn.Sigmoid())
         
