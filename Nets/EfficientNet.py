@@ -4,6 +4,7 @@ import torch
 from torch import nn
 from math import ceil
 import numpy as np
+import torch.nn.functional as F
 
 from . import BaseBlocks as bb
 
@@ -84,4 +85,4 @@ class EfficientNet(nn.Module):
         x = self.pre(x)
         x = self.mbconv_layers(x)
         x = self.head(x)
-        return x
+        return F.log_softmax(x, dim=1)
