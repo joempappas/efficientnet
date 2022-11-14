@@ -86,12 +86,13 @@ class MBConvBlock(nn.Module):
                                           )
         
     def forward(self, x):
+        x_ = x.clone()
         if self.mb_type == 6: 
-            x = self.expand_block(x)
-        x = self.reduce_block(x)
+            x_ = self.expand_block(x_)
+        x_ = self.reduce_block(x_)
         if (self.use_skip_connect):
-            result = self.stochastic_depth(x)
-            x = x + result
-        return x
+            x_ = self.stochastic_depth(x_)
+            x_ = x_ + x
+        return x_
         
         
