@@ -19,7 +19,6 @@ class ConvBlock(nn.Module):
         self.kernel_size = kernel_size
         
     def forward(self, x):
-        print("Starting Conv Block")
         x = self.conv(x)
         x = self.bn(x)
         x = self.swish(x)
@@ -37,7 +36,6 @@ class SEBlock(nn.Module):
                                         nn.Sigmoid())
         
     def forward(self, x):
-        print("Starting SEBlock ")
         result = self.squeeze(x)
         result = self.excite(result)
         return result*x
@@ -49,7 +47,6 @@ class StochasticDepth(nn.Module):
         self.mode = "row"
         
     def forward(self, input):
-        print("Starting Stochastic Depth Block")
         if (self.drop_prob == 0) or (not self.training):
             return input
         survival_rate = 1.0 - self.drop_prob
@@ -90,10 +87,12 @@ class MBConvBlock(nn.Module):
     def forward(self, x):
         print("Starting MBConv Block")
         if self.mb_type == 6: 
+            print("Calling Expand")
             x = self.expand_block(x)
-        
+        print("Calling Reduce")
         x = self.reduce_block(x)
         if (self.use_skip_connect):
+            print("Calling Stochastic Depth")
             result = self.stochastic_depth(x)
             x = x + result
         return x
