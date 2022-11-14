@@ -13,9 +13,15 @@ class BaseBlock(nn.Module):
         padding = kernel_size//2
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding)
         self.act = nn.ReLU()
+        self.use_skip_connect = (in_channels == out_channels) and (stride == 1)
     
     def forward(self, x):
-        return self.act(self.conv(x))
+        x_ = x.clone()
+        x_ = self.act(self.conv(x))
+        if self.use_skip_connect:
+            return x_ + x 
+        else:
+            return x_
     
     
 class JoeNet(nn.Module):
@@ -40,15 +46,11 @@ class JoeNet(nn.Module):
             {
                 "in_dim":128,
                 "out_dim":256
-            },
-            {
-                "in_dim":256,
-                "out_dim":256
             }
         ]
-        base_depths = [2,2,3,3,2]
-        kernels = [3,3,3,3,3]
-        strides = [1,1,1,1,1]
+        base_depths = [1,2,3,2]
+        kernels = [3,3,3,3]
+        strides = [1,1,1,1]
         scaled_widths = []
         for i in range(len(base_widths)):
             scaled_widths.append((self.do_scale_width(base_widths[i]["in_dim"], scale_width), self.do_scale_width(base_widths[i]["out_dim"], scale_width)))
@@ -56,7 +58,7 @@ class JoeNet(nn.Module):
         self.pre = BaseBlock(3, scaled_widths[0][0], kernel_size=3, stride=1, padding=1)
         conv_layers = []
         
-        for i in range(5):
+        for i in range(len(base_widths)):
             d = scaled_depths[i]
             lays = [BaseBlock(scaled_widths[i][0], scaled_widths[i][1], kernel_size=kernels[i], stride= strides[i])]
             for j in range(d-1):
@@ -66,9 +68,9 @@ class JoeNet(nn.Module):
         self.conv_layers = nn.Sequential(*conv_layers)
         self.head = nn.Sequential(nn.AdaptiveAvgPool2d(1),
                                   nn.Flatten(),
-                                  nn.Linear(scaled_widths[-1][1], 1024),
-                                  nn.Linear(1024, 1024),
-                                  nn.Linear(1024, output_size))
+                                  nn.Linear(scaled_widths[-1][1], 512),
+                                  nn.Linear(512, 512),
+                                  nn.Linear(512, output_size))
         
     def do_scale_width(self, w, scale_factor):
         w *= scale_factor
