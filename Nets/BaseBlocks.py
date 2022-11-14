@@ -75,6 +75,7 @@ class MBConvBlock(nn.Module):
         
         padding = kernel_size//2
         hidden_dims = mb_type*in_channels
+        self.drop_prob = drop_prob
         self.mb_type = mb_type
         self.use_skip_connect = (in_channels == out_channels) and (stride == 1)
         self.expand_block = ConvBlock(in_channels, hidden_dims, kernel_size=1, stride=1, padding=0) if mb_type==6 else None
@@ -85,14 +86,10 @@ class MBConvBlock(nn.Module):
                                           )
         
     def forward(self, x):
-        print("Starting MBConv Block")
         if self.mb_type == 6: 
-            print("Calling Expand")
             x = self.expand_block(x)
-        print("Calling Reduce")
         x = self.reduce_block(x)
         if (self.use_skip_connect):
-            print("Calling Stochastic Depth")
             result = self.stochastic_depth(x)
             x = x + result
         return x
