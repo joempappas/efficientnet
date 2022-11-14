@@ -12,12 +12,14 @@ class BaseBlock(nn.Module):
         
         padding = kernel_size//2
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding)
+        self.bn = nn.BatchNorm2d(out_channels)
         self.act = nn.ReLU()
         self.use_skip_connect = (in_channels == out_channels) and (stride == 1)
     
     def forward(self, x):
         x_ = x.clone()
-        x_ = self.act(self.conv(x))
+        x_ = self.conv(x)
+        x_ = self.act(self.bn(x_))
         if self.use_skip_connect:
             return x_ + x 
         else:
