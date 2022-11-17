@@ -1,7 +1,7 @@
 # efficientnet
 Reimplementation of EfficientNet
 
-#Directions for running experiments
+# Directions for running experiments
 
 Detailed instructions given in `RunExercises.ipynb`. To run these experiments, 
 unzip this directory into a google drive folder. Then you can open the notebook.
